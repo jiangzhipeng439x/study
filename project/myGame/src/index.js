@@ -1,0 +1,1 @@
+document.getElementById("app").innerHTML = '这是一个游戏222'
