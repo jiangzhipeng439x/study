@@ -1,0 +1,81 @@
+<html>
+<title>笔记</title>
+<style>
+    *{
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+    .content {
+        display: flex;
+        height: calc(100vh);
+    }
+
+    .content .left {
+        flex: 1;
+        cursor: pointer;
+    }
+    .content .left li{
+        height: 30px;
+        line-height: 30px;
+        border-bottom: 1px solid #ccc;
+    }
+    .content .right {
+        flex: 8;
+        padding: 10px;
+        border-left: 1px solid #ccc;
+        overflow: auto;
+    }
+    blockquote{
+        border:1px solid #ccc;
+    }
+    code{
+        display:block;
+        width:500px;
+        background-color:#000;
+        color:#fff;
+        padding:10px;
+        line-height:2;
+        word-break:break-all;
+    }
+    img{
+        width: 520px;
+    }
+</style>
+
+<body>
+    <div class="content">
+        <ul class="left" id="left"></ul>
+        <pre class="right" id="right"></pre>
+    </div>
+</body>
+<script>
+    document.getElementById("left").addEventListener('click', function (event) {
+        if (event.target.nodeName == 'LI') {
+            getFile(event.target.dataset.name)
+        }
+    })
+    fetch("/getFileLiST").then(response => response.json()).then(result => {
+        getFile(result.data[0] && result.data[0].filename);
+        let htmlList = result.data.length && result.data.map(item => {
+            return '<li data-name="'+item.filename+'">' + (function(){let name = item.filename.split('.');return name.filter((item,index)=>{return index != name.length-1;}).join(".")}()) + '</li>'
+        })
+        document.getElementById("left").innerHTML = htmlList.join('');
+    })
+    function getFile(fileName) {
+        fetch("/getFile", {
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                'fileName': fileName
+            })
+        }).then(response => response.json()).then(result => {
+            document.getElementById("right").innerHTML = result.data;
+        })
+    }
+
+</script>
+
+</html>
