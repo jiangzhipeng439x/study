@@ -83,8 +83,6 @@ class Graphic {
             }
             return program;
         }
-
-
         this.createProgramFromSources = (gl, shaderSources, opt_attribs, opt_locations, opt_errorCallback) => {
             let shaders = [];
             for (let ii = 0; ii < shaderSources.length; ++ii) {
@@ -94,20 +92,20 @@ class Graphic {
         }
         this.gl = init(params.ele, params.width, params.height);
         this.draw(vs, fs, new Float32Array([
-            0,0,0,
-            0.5,0,0,
-            0.5,0,0.5,
-            0,0,0.5,
-            0,0,0,
+            0, 0, 0,
+            0.5, 0, 0,
+            0.5, 0, 0.5,
+            0, 0, 0.5,
+            0, 0, 0,
 
-            0,0.5,0,
-            0,0.5,0.5,
-            0,0,0.5
-            
-            
+            0, 0.5, 0,
+            0, 0.5, 0.5,
+            0, 0, 0.5
 
 
-           ]));
+
+
+        ]));
     }
 
     draw(vs, fs, matrix) {
