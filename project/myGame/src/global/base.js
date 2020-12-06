@@ -1,150 +1,174 @@
+function _createShader(gl, type, source) {
+    var shader = gl.createShader(type); // 创建着色器对象
+    gl.shaderSource(shader, source); // 提供数据源
+    gl.compileShader(shader); // 编译 -> 生成着色器
+    var success = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
+    if (success) {
+        return shader;
+    }
+
+    console.log(gl.getShaderInfoLog(shader));
+    gl.deleteShader(shader);
+}
+function _createProgram(gl, vertexShader, fragmentShader) {
+    var program = gl.createProgram();
+    gl.attachShader(program, vertexShader);
+    gl.attachShader(program, fragmentShader);
+    gl.linkProgram(program);
+    var success = gl.getProgramParameter(program, gl.LINK_STATUS);
+    if (success) {
+        return program;
+    }
+
+    console.log(gl.getProgramInfoLog(program));
+    gl.deleteProgram(program);
+}
+function _init(ele, width, height) {
+    let canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    ele.appendChild(canvas);
+    let gl = canvas.getContext("webgl");
+    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+    gl.enable(gl.CULL_FACE);            //开启背面剔除
+    gl.enable(gl.DEPTH_TEST);           //开启深度测试，背面的不渲染
+
+    //当我们需要绘制透明图像时，就需要关闭它
+    //gl.Disable(gl.DEPTH_TEST);
+    //gl.Enable(gl.BLEND); 并且打开混合
+    //gl.Color4f(1.0,1.0,1.0,0.5);
+    //gl.BlendFunc(gl.SRC_ALPHA,gl.ONE);
+
+    return gl;
+}
 class Graphic {
+
+    //构造函数，直接进行初始化
     constructor(params) {
         this.params = params;
-        const defaultShaderType = ["VERTEX_SHADER", "FRAGMENT_SHADER"];
-        const vs = `// an attribute will receive data from a buffer
-                    attribute vec4 a_position;
-
-                    // all shaders have a main function
-                    void main() {
-
-                    // gl_Position is a special variable a vertex shader
-                    // is responsible for setting
-                    gl_Position = a_position;
-                    gl_PointSize = 10.0;
-                    }`;
-        const fs = `precision highp float;
-                    void main() {
-                    // gl_FragColor is a special variable a fragment shader
-                    // is responsible for setting
-
-                    gl_FragColor = vec4(1, 0, 0.5, 1); // return reddish-purple
-                    }`;
-
-        function init(ele, width, height) {
-            let canvas = document.createElement('canvas');
-            canvas.width = width;
-            canvas.height = height;
-            ele.appendChild(canvas);
-            let gl = canvas.getContext("webg2") || canvas.getContext("webgl") || canvas.getContext("webgl");
-            return gl;
-        }
-        function error(err) {
-            console.warn(err)
-        }
-        function loadShader(gl, shaderSource, shaderType, opt_errorCallback) {
-            let errFn = opt_errorCallback || error;
-            // Create the shader object
-            let shader = gl.createShader(shaderType);
-
-            // Load the shader source
-            gl.shaderSource(shader, shaderSource);
-
-            // Compile the shader
-            gl.compileShader(shader);
-
-            // Check the compile status
-            let compiled = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
-            if (!compiled) {
-                // Something went wrong during compilation; get the error
-                let lastError = gl.getShaderInfoLog(shader);
-                errFn("*** Error compiling shader '" + shader + "':" + lastError);
-                gl.deleteShader(shader);
-                return null;
-            }
-
-            return shader;
-        }
-        function loadProgram(gl, shaders, opt_attribs, opt_locations, opt_errorCallback) {
-            let errFn = opt_errorCallback || error;
-            let program = gl.createProgram();
-            for (let ii = 0; ii < shaders.length; ++ii) {
-                gl.attachShader(program, shaders[ii]);
-            }
-            if (opt_attribs) {
-                for (let ii = 0; ii < opt_attribs.length; ++ii) {
-                    gl.bindAttribLocation(
-                        program,
-                        opt_locations ? opt_locations[ii] : ii,
-                        opt_attribs[ii]);
-                }
-            }
-            gl.linkProgram(program);
-
-            // Check the link status
-            let linked = gl.getProgramParameter(program, gl.LINK_STATUS);
-            if (!linked) {
-                // something went wrong with the link
-                let lastError = gl.getProgramInfoLog(program);
-                errFn("Error in program linking:" + lastError);
-
-                gl.deleteProgram(program);
-                return null;
-            }
-            return program;
-        }
-        this.createProgramFromSources = (gl, shaderSources, opt_attribs, opt_locations, opt_errorCallback) => {
-            let shaders = [];
-            for (let ii = 0; ii < shaderSources.length; ++ii) {
-                shaders.push(loadShader(gl, shaderSources[ii], gl[defaultShaderType[ii]], opt_errorCallback));
-            }
-            return loadProgram(gl, shaders, opt_attribs, opt_locations, opt_errorCallback);
-        }
-        this.gl = init(params.ele, params.width, params.height);
-        this.draw(vs, fs, new Float32Array([
-            0, 0, 0,
-            0.5, 0, 0,
-            0.5, 0, 0.5,
-            0, 0, 0.5,
-            0, 0, 0,
-
-            0, 0.5, 0,
-            0, 0.5, 0.5,
-            0, 0, 0.5
-
-
-
-
-        ]));
+        this.gl = _init(params.ele, params.width, params.height);
+        params.vs && params.fs && this.programInit(params.vs,params.fs);
+        params.position && this.attributeInit(params.position);
+        params.position && params.positions && params.size && this.setPositionBuffer(params.position,params.positions,params.size);
+        params.indexData && this.setIndexBuffer(params.indexData);
     }
 
-    draw(vs, fs, matrix) {
+    //进行绘制，使用drawElements 会节约内存
+    draw(type,count,offset){
+        let gl = this.gl;
+        if(this.isIndex){
+            gl.drawElements(gl[type],count,this.indexType,offset);
+        }else{
+            gl.drawArrays(gl[type], offset, count);   
+        }
+    }
+
+    //改变公用变量
+    changeUniform(name,type,data,dataType){
+        let gl = this.gl;
+        let u_name = gl.getUniformLocation(this.program, name);
+        if(dataType && dataType == 'array'){
+            gl[type](u_name,data);
+        }else{
+            gl[type](u_name,...data);
+        }
+    }
+
+    //着色项目初始化
+    programInit(vs, fs) {
+        let gl = this.gl;
+        let vertexShader = _createShader(gl, gl.VERTEX_SHADER, vs);
+        let fragmentShader = _createShader(gl, gl.FRAGMENT_SHADER, fs);
+        let program = _createProgram(gl, vertexShader, fragmentShader);
+        gl.useProgram(program);
+        this.program = program;
+        this.indexTypeInit();
+        this.clearIndexBuffer();
+    }
+
+    //顶点属性和缓冲初始化
+    attributeInit(position){
+        let [gl,program] = [this.gl,this.program];
+        let positionAttributeLocation = gl.getAttribLocation(program, position);
+        gl.enableVertexAttribArray(positionAttributeLocation);
+        this[position] = positionAttributeLocation;
+    }
+
+    //设置顶点缓冲buffer
+    setPositionBuffer(position,positions,size){
+        let gl =this.gl;
+        let positionBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+        gl.vertexAttribPointer(this[position], size, gl.FLOAT, false, 0, 0);
+    }
+
+    //设置索引buffer
+    setIndexBuffer(iData){
+        let gl = this.gl;
+        let indexData = new Uint16Array(iData);
+        let indexBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indexData, gl.STREAM_DRAW);
+        this.isIndex = true;
+    }
+
+    //索引扩展初始化
+    indexTypeInit(){
+        let gl = this.gl;
+        let indexType = gl.UNSIGNED_SHORT;
+        const ext = gl.getExtension('OES_element_index_uint');  //大小是4294967296
+        if (ext) {
+            // 回退使用 gl.UNSIGNED_SHORT 或者告诉用户
+            //indexType = gl.UNSIGNED_INT;  会报Insufficient buffer size
+        }
+        this.indexType = indexType;
+    }
+
+    //清楚画布
+    clear() {
         let gl = this.gl;
         gl.clearColor(0, 0, 0, 0);
-        gl.clear(gl.COLOR_BUFFER_BIT);
-        let program = this.createProgramFromSources(gl, [vs, fs])
-        gl.useProgram(program);
-        let positionLocation = gl.getAttribLocation(program, "a_position")
-        let buffer = gl.createBuffer()
-        gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-        gl.bufferData(
-            gl.ARRAY_BUFFER,
-            matrix,
-            gl.STATIC_DRAW);
-        gl.enableVertexAttribArray(positionLocation);
-        gl.vertexAttribPointer(positionLocation, 3, gl.FLOAT, false, 0, 0);
-
-        // draw
-        gl.drawArrays(gl.LINE_STRIP, 0, 20);
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+        this.clearIndexBuffer();
     }
 
+    //清楚索引Buffer
+    clearIndexBuffer(){
+        this.isIndex && (this.isIndex = null);
+    }
+
+    //销毁画布
     destroy() {
-
+        this.gl.canvas.remove();
     }
 
+    //获取canvas对象
     getCanvas() {
-        return this.canvas;
+        return this.gl.canvas;
     }
+
+    
 }
 
 class D2 extends Graphic {
     constructor(params) {
+        params.size = 2;
         super(params)
+    }
+
+    //获取矩形数据
+    get2DRectData(point,width,height){
+        let [x,y] = point;
+        let _arr = [x,y,x+width,y,x+width,y+height,x,y+height];
+        let _brr = [0,3,1,3,2,1];
+        return [_arr,_brr]
     }
 }
 
 class D3 extends Graphic {
     constructor(params) {
+        params.size = 3;
         super(params)
     }
 }
@@ -154,4 +178,4 @@ let init = function (params) {
     return params.type == '2D' ? new D2(params) : new D3(params);
 }
 
-export default init;
+export default init

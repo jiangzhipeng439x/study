@@ -162,7 +162,7 @@ var primitiveType = gl.TRIANGLES;   //告诉CPU以哪种形式渲染
 var offset = 0;                     //从缓冲之中的第几条数据开始渲染
 var count = 3;                      //渲染几次
 gl.enable(gl.CULL_FACE);            //只画正面三角形
- gl.enable(gl.DEPTH_TEST); 
+gl.enable(gl.DEPTH_TEST); 
 gl.drawArrays(primitiveType, offset, count);
 ```
 
@@ -308,6 +308,34 @@ var someThingSomeVec2Loc = gl.getUniformLocation(someProgram, "u_someThing.someV
 4、可变量（Varyings）
 
 可变量是一种顶点着色器给片断着色器传值的方式，依照渲染的图元是点， 线还是三角形，顶点着色器中设置的可变量会在片断着色器运行中获取不同的插值。
+
+顶点着色器
+```
+attribute vec4 a_position;
+ 
+uniform vec4 u_offset;
+ 
+varying vec4 v_positionWithOffset; //定义
+ 
+void main() {
+  gl_Position = a_position + u_offset;
+  v_positionWithOffset = a_position + u_offset;  //改变
+}
+```
+片段着色器
+```
+precision mediump float;
+ 
+varying vec4 v_positionWithOffset; //定义
+ 
+void main() {
+  // 从裁剪空间 (-1 <-> +1) 转换到颜色空间 (0 -> 1).
+  vec4 color = v_positionWithOffset * 0.5 + 0.5  //使用
+  gl_FragColor = color;
+}
+```
+
+
 
 ### 四、片断着色器
 

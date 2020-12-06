@@ -2,7 +2,6 @@
   "name": "note",
   "version": "1.0.0",
   "description": "",
-  "main": "service.js",
   "scripts": {
     "dev": "node service.js"
   },
