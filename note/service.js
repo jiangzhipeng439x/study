@@ -5,13 +5,31 @@ const url = require('url');
 const marked = require('marked');
 const path = require('path');
 const bodyParser = require('body-parser');
+const child_process = require("child_process")
 
 const app = express();
 app.use(express.static(path.join(__dirname, 'public')))
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.listen(8088, () => {
-    console.log('服务启动')
+    console.log('服务启动:locahost:8088');
+    let url = "http://127.0.0.1",
+        port = 8088,
+        cmd = 'start';
+    switch (process.platform) {
+        case 'wind32':
+            cmd = 'start';
+            break;
+
+        case 'linux':
+            cmd = 'xdg-open';
+            break;
+
+        case 'darwin':
+            cmd = 'open';
+            break;
+    }
+    child_process.exec(cmd + ' ' + url + ':' + port);
 })
 
 app.get('/getFileList', (req, res) => {
@@ -77,7 +95,7 @@ http.createServer(function (request, response) {
                 return '<code style="display:block;width:500px;background-color:#000;color:#fff;padding:10px;line-height:2;word-break:break-all;"'+path+'>';
             })
             response.end(str);
-        } 
+        }
     });
 
 }).listen(8081);
