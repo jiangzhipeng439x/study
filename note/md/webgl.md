@@ -398,3 +398,29 @@ gl.bindTexture(gl.TEXTURE_2D, tex);
 ```
 gl.uniform1i(someSamplerLoc, unit);
 ```
+
+
+
+
+```
+ attibute vec4 a_position;
+ uniform vec4 u_uniform;
+ void main(){
+   gl_position = a_position;
+ }
+
+ precision mediump float;
+
+
+ precision highp float
+
+ precision lowp float
+
+ percision mediump float
+
+ uniform vec4 u_uniform
+
+ void main(){
+   gl_FragColor  = vec4(u_uniform.xy * vec2(1,-1),1,1)
+ }
+```
