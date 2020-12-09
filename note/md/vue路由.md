@@ -180,7 +180,7 @@ init (app: any /* Vue component instance */) {
 ```
 HashHistory.replace()
 
-　　　　　　replace()方法与push()方法不同之处在于，它并不是将新路由添加到浏览器访问历史的栈顶，而是替换掉当前的路由
+replace()方法与push()方法不同之处在于，它并不是将新路由添加到浏览器访问历史的栈顶，而是替换掉当前的路由
 
 ```
 HashHisttory.replace()
