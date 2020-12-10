@@ -11,3 +11,15 @@
 
 
 ### 五、entries
+
+
+### 六、splice
+
+
+### 七、forEach
+
+
+### 八、map
+
+
+### 九、filter
