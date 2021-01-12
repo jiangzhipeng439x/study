@@ -2,9 +2,9 @@
   "name": "note",
   "version": "1.0.0",
   "description": "",
-  "main": "service.js",
   "scripts": {
-    "dev": "node service.js"
+    "dev": "node service.js",
+    "start":"npm run dev"
   },
   "author": "",
   "license": "ISC",

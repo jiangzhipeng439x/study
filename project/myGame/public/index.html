@@ -1,10 +1,38 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title><%= htmlWebpackPlugin.options.title %></title>
-    <meta charset="utf-8"/>
-  </head>
-  <body>
-    <div id="app"></div>
-  </body>
+
+<head>
+  <title><%= htmlWebpackPlugin.options.title %></title>
+  <meta charset="utf-8" />
+</head>
+
+<body>
+  <div id="app"></div>
+
+  <script id='VERTEX_SHADER' type="notjs">
+      attribute vec4 a_position;
+      uniform vec2 u_resolution;
+      void main() {
+  
+        vec2 zeroToOne = a_position.xy / u_resolution;
+ 
+        // 再把 0->1 转换 0->2
+        vec2 zeroToTwo = zeroToOne * 2.0;
+    
+        // 把 0->2 转换到 -1->+1 (裁剪空间)
+        vec2 clipSpace = zeroToTwo - 1.0;
+    
+        gl_Position = vec4(clipSpace * vec2(1, -1), 0, 1);
+      }
+     
+    </script>
+  <script id='FRAGMENT_SHADER' type="notjs">
+      precision mediump float;
+      uniform vec4 u_color;
+      void main() {
+        gl_FragColor = u_color; 
+      }
+    </script>
+</body>
+
 </html>
